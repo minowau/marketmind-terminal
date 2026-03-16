@@ -16,17 +16,17 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const { collapsed } = useSidebarState();
+  const { collapsed, isMobile } = useSidebarState();
   return (
     <div className="flex min-h-screen w-full">
       <AppSidebar />
       <motion.div
-        animate={{ marginLeft: collapsed ? 60 : 200 }}
+        animate={{ marginLeft: isMobile ? 0 : collapsed ? 60 : 200 }}
         transition={{ duration: 0.2 }}
-        className="flex-1 flex flex-col min-h-screen"
+        className="flex-1 flex flex-col min-h-screen min-w-0"
       >
         <AppHeader />
-        <main className="flex-1">
+        <main className="flex-1 overflow-x-hidden">
           <AnimatePresence mode="wait">
             <Routes>
               <Route path="/" element={<Index />} />
