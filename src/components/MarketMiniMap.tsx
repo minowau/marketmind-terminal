@@ -22,8 +22,8 @@ function getHeatColor(change: number): string {
 
 export default function MarketMiniMap() {
   return (
-    <div className="rounded-md border border-border bg-card p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+    <div className="rounded-md border border-border bg-card p-3 md:p-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 md:mb-3">
         Sector Heatmap
       </h3>
       <motion.div
@@ -36,10 +36,10 @@ export default function MarketMiniMap() {
           <motion.div
             key={sector.name}
             variants={staggerItem}
-            className={`rounded border p-2 text-center cursor-pointer transition-all hover:scale-105 ${getHeatColor(sector.change)}`}
+            className={`rounded border p-1.5 md:p-2 text-center cursor-pointer transition-all hover:scale-105 ${getHeatColor(sector.change)}`}
           >
-            <div className="text-[10px] font-medium truncate">{sector.name}</div>
-            <div className="font-mono text-xs font-bold mt-0.5">
+            <div className="text-[9px] md:text-[10px] font-medium truncate">{sector.name}</div>
+            <div className="font-mono text-[10px] md:text-xs font-bold mt-0.5">
               {sector.change > 0 ? "+" : ""}{sector.change}%
             </div>
           </motion.div>
