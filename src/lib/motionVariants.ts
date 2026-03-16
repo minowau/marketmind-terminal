@@ -1,7 +1,12 @@
+import type { Easing } from "framer-motion";
+
+const easeOut: Easing = [0, 0, 0.2, 1];
+const easeIn: Easing = [0.4, 0, 1, 1];
+
 export const fadeInUp = {
   initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.22, ease: "easeOut" } },
-  exit: { opacity: 0, y: -6, transition: { duration: 0.18, ease: "easeIn" } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.22, ease: easeOut } },
+  exit: { opacity: 0, y: -6, transition: { duration: 0.18, ease: easeIn } },
 };
 
 export const fadeIn = {
@@ -12,7 +17,7 @@ export const fadeIn = {
 
 export const scaleIn = {
   initial: { opacity: 0, scale: 0.96 },
-  animate: { opacity: 1, scale: 1, transition: { duration: 0.22, ease: "easeOut" } },
+  animate: { opacity: 1, scale: 1, transition: { duration: 0.22, ease: easeOut } },
 };
 
 export const cardHover = {
@@ -36,7 +41,7 @@ export const staggerItem = {
 export const pulseScale = {
   animate: {
     scale: [1, 1.04, 1],
-    transition: { duration: 0.5, ease: "easeInOut" },
+    transition: { duration: 0.5 },
   },
 };
 
@@ -48,6 +53,6 @@ export const slideInRight = {
 
 export const pageTransition = {
   initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.22, ease: "easeOut" } },
-  exit: { opacity: 0, y: -6, transition: { duration: 0.18, ease: "easeIn" } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.22, ease: easeOut } },
+  exit: { opacity: 0, y: -6, transition: { duration: 0.18, ease: easeIn } },
 };
