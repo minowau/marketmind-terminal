@@ -1,2 +1,0 @@
-web: ..\venv\Scripts\python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
-worker: ..\venv\Scripts\python -m celery -A app.workers.celery_app.celery worker --loglevel=info -P solo
