@@ -9,6 +9,24 @@ from sqlmodel import SQLModel, Session
 from contextlib import contextmanager, asynccontextmanager
 
 from app.config import settings
+from app.utils.logging import get_logger
+
+logger = get_logger("db")
+
+def get_masked_url(url: str) -> str:
+    """Mask the password in the database URL for logging."""
+    try:
+        from urllib.parse import urlparse, urlunparse
+        parsed = urlparse(url)
+        if parsed.password:
+            new_netloc = f"{parsed.username}:****@{parsed.hostname}:{parsed.port}"
+            return urlunparse(parsed._replace(netloc=new_netloc))
+        return url
+    except Exception:
+        return "invalid-url"
+
+# Log the connection target (masked) for debugging
+logger.info("initializing_db_engine", url=get_masked_url(settings.DATABASE_URL))
 
 # ── Async Engine (for FastAPI endpoints) ──
 async_engine = create_async_engine(
