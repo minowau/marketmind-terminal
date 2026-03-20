@@ -22,12 +22,6 @@ services:
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: marketmind-backend
-          property: url
 
 databases:
   - name: marketmind-db
