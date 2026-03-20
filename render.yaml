@@ -17,10 +17,11 @@ services:
         value: 3.11.5
 
   # ── Frontend (Static Site) ──
-  - type: static
+  - type: web
     name: marketmind-frontend
+    env: static
     buildCommand: npm install && npm run build
-    publishPath: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         fromService:
