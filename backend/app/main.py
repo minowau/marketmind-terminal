@@ -81,21 +81,44 @@ app.include_router(websocket_router, prefix="/ws")
 
 
 # ── Root Endpoint ──
-@app.get("/", tags=["Root"])
-async def root():
-    """Root endpoint — basic API info."""
+@app.get("/api/v1", tags=["Root"])
+async def api_root():
+    """API root endpoint — basic info."""
     return {
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "docs": "/docs",
         "openapi": "/openapi.json",
-        "endpoints": {
-            "opportunities": "/api/v1/opportunities",
-            "news": "/api/v1/news",
-            "stock": "/api/v1/stock",
-            "signals": "/api/v1/signals",
-            "admin": "/api/v1/admin",
-            "waitlist": "/api/v1/waitlist",
-            "websocket": "/ws/simulation",
-        },
     }
+
+
+# ── Static File Serving (Frontend) ──
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Use /app/dist for Docker compatibility or local relative path
+dist_path = os.path.join(os.getcwd(), "dist")
+
+if os.path.exists(dist_path):
+    # Mount the assets directory
+    app.mount("/assets", StaticFiles(directory=os.path.join(dist_path, "assets")), name="assets")
+
+    # Catch-all route to serve index.html for React Router
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        # Allow API routes to pass through (though they are matched first)
+        if full_path.startswith("api/") or full_path.startswith("ws/"):
+            return None
+        
+        # Check if requested file exists in dist (e.g. favicon.ico)
+        file_path = os.path.join(dist_path, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+            
+        # Default to index.html for SPA routing
+        return FileResponse(os.path.join(dist_path, "index.html"))
+else:
+    @app.get("/")
+    async def root():
+        return {"message": "MarketMind AI API is running. Frontend not found in /dist"}
