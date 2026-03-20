@@ -39,11 +39,12 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.5
 
+  # ── Redis (Cache/Queue) ──
+  - type: redis
+    name: marketmind-redis
+    plan: free
+    ipAllowList: [] # Allow all internal connections
+
 databases:
   - name: marketmind-db
     plan: free
-
-redis:
-  - name: marketmind-redis
-    plan: free
-    ipAllowList: [] # Allow all internal connections
