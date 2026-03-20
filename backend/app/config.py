@@ -3,9 +3,7 @@ MarketMind AI v2 — Application Configuration
 Loads environment variables via pydantic-settings.
 """
 
-import os
-from pydantic import field_validator, ValidationInfo
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 from typing import List, Optional
 
 
@@ -56,50 +54,15 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
 
-    @field_validator("DATABASE_URL", mode="before")
-    @classmethod
-    def assemble_db_url(cls, v: Optional[str]) -> Optional[str]:
-        """Ensure the DATABASE_URL uses the asyncpg driver and handle Render env vars."""
-        # HIGHEST PRIORITY: Render's unique env var
-        render_url = os.getenv("RENDER_DATABASE_URL")
-        # SECOND PRIORITY: Standard DATABASE_URL (might be set by Render or .env)
-        std_url = os.getenv("DATABASE_URL")
-        
-        target = render_url or std_url or v
-        
-        if not target:
-            return target
-            
-        if target.startswith("postgres://"):
-            target = target.replace("postgres://", "postgresql+asyncpg://", 1)
-        elif target.startswith("postgresql://") and "+asyncpg" not in target:
-            target = target.replace("postgresql://", "postgresql+asyncpg://", 1)
-        
-        return target
-
-    @field_validator("DATABASE_URL_SYNC", mode="before")
-    @classmethod
-    def assemble_sync_db_url(cls, v: Optional[str]) -> Optional[str]:
-        """Ensure the DATABASE_URL_SYNC uses the standard postgresql driver."""
-        env_val = os.getenv("DATABASE_URL_SYNC")
-        target = env_val if env_val else v
-        
-        if isinstance(target, str) and target.startswith("postgres://"):
-            return target.replace("postgres://", "postgresql://", 1)
-        return target
-
     @property
     def cors_origins_list(self) -> List[str]:
         """Parse comma-separated CORS origins into a list."""
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=True,
-        extra="ignore",
-        env_prefix="",
-    )
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        case_sensitive = True
 
 
 # Singleton instance — import this everywhere
