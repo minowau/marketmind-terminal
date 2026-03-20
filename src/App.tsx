@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar, AppHeader, SidebarProvider, useSidebarState } from "@/components/AppLayout";
 import { AnimatePresence, motion } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 import Index from "./pages/Index";
 import NewsPage from "./pages/NewsPage";
 import SignalsPage from "./pages/SignalsPage";
@@ -72,6 +73,7 @@ const App = () => (
           <AppContent />
         </SidebarProvider>
       </BrowserRouter>
+      <Analytics />
     </TooltipProvider>
   </QueryClientProvider>
 );
