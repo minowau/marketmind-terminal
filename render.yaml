@@ -1,3 +1,4 @@
+services:
   # ── Backend (FastAPI API) ──
   - type: web
     name: marketmind-api
