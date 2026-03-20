@@ -60,9 +60,12 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_db_url(cls, v: Optional[str]) -> Optional[str]:
         """Ensure the DATABASE_URL uses the asyncpg driver and handle Render env vars."""
-        # Prefer environment variable if it exists, even if Pydantic should do it.
-        env_val = os.getenv("DATABASE_URL")
-        target = env_val if env_val else v
+        # HIGHEST PRIORITY: Render's unique env var
+        render_url = os.getenv("RENDER_DATABASE_URL")
+        # SECOND PRIORITY: Standard DATABASE_URL (might be set by Render or .env)
+        std_url = os.getenv("DATABASE_URL")
+        
+        target = render_url or std_url or v
         
         if not target:
             return target

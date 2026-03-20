@@ -36,7 +36,7 @@ if "localhost" in current_url and os.getenv("RENDER") == "true":
                  hint="Check if DATABASE_URL is correctly set in Render dashboard or render.yaml")
     # Log other related env vars to help debug
     related_vars = {k: "set" if v else "empty" for k, v in os.environ.items() 
-                    if "DATABASE" in k or "POSTGRES" in k}
+                    if any(x in k for x in ["DATABASE", "POSTGRES", "RENDER_URL"])}
     logger.info("related_env_vars", **related_vars)
 
 # ── Async Engine (for FastAPI endpoints) ──
