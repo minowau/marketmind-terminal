@@ -3,6 +3,7 @@ MarketMind AI v2 — Database Session & Engine
 Provides async engine, session factory, and FastAPI dependency.
 """
 
+import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import create_engine
 from sqlmodel import SQLModel, Session
@@ -26,7 +27,17 @@ def get_masked_url(url: str) -> str:
         return "invalid-url"
 
 # Log the connection target (masked) for debugging
-logger.info("initializing_db_engine", url=get_masked_url(settings.DATABASE_URL))
+current_url = settings.DATABASE_URL
+masked_url = get_masked_url(current_url)
+logger.info("initializing_db_engine", url=masked_url)
+
+if "localhost" in current_url and os.getenv("RENDER") == "true":
+    logger.error("database_url_is_localhost_in_render", 
+                 hint="Check if DATABASE_URL is correctly set in Render dashboard or render.yaml")
+    # Log other related env vars to help debug
+    related_vars = {k: "set" if v else "empty" for k, v in os.environ.items() 
+                    if "DATABASE" in k or "POSTGRES" in k}
+    logger.info("related_env_vars", **related_vars)
 
 # ── Async Engine (for FastAPI endpoints) ──
 async_engine = create_async_engine(
