@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 6% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 6% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
+
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.375rem;
+
+    --sidebar-background: 240 6% 6%;
+    --sidebar-foreground: 240 5% 65%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 217 91% 60%;
+
+    --chart-1: 217 91% 60%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 0 84% 60%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 280 65% 60%;
+
+    --primary-rgb: 59, 130, 246;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(240 6% 10%);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(240 4% 25%);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(240 4% 35%);
+  }
+}
+
+@layer components {
+  .terminal-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px hsl(217 91% 60% / 0.15);
+  }
+
+  .glow-success {
+    box-shadow: 0 0 20px hsl(142 71% 45% / 0.15);
+  }
+
+  .glow-destructive {
+    box-shadow: 0 0 20px hsl(0 84% 60% / 0.15);
+  }
+
+  .ticker-scroll {
+    animation: ticker-scroll 30s linear infinite;
+  }
+
+  .ticker-scroll:hover {
+    animation-play-state: paused;
+  }
+
+  @keyframes ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @keyframes pulse-border {
+    0%, 100% { border-color: hsl(240 4% 16%); }
+    50% { border-color: hsl(217 91% 60%); }
+  }
+
+  .animate-pulse-border {
+    animation: pulse-border 1s ease-in-out;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(var(--primary), 0.2);
+    border-radius: 20px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--primary), 0.4);
+  }
+}
