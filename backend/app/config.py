@@ -74,6 +74,22 @@ class Settings(BaseSettings):
         
         return target
 
+    @field_validator("DATABASE_URL_SYNC", mode="before")
+    @classmethod
+    def assemble_sync_db_url(cls, v: Optional[str]) -> Optional[str]:
+        """Ensure the DATABASE_URL_SYNC uses the standard postgresql driver."""
+        env_val = os.getenv("DATABASE_URL_SYNC")
+        target = env_val if env_val else v
+        
+        if isinstance(target, str) and target.startswith("postgres://"):
+            return target.replace("postgres://", "postgresql://", 1)
+        return target
+
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """Parse comma-separated CORS origins into a list."""
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
