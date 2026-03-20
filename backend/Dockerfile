@@ -28,5 +28,5 @@ COPY . .
 # Expose FastAPI default port
 EXPOSE 8000
 
-# Default entrypoint: run FastAPI with Uvicorn (no reload in production)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default entrypoint: run FastAPI with Uvicorn
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
