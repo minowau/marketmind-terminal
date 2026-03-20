@@ -3,6 +3,7 @@ MarketMind AI v2 — Application Configuration
 Loads environment variables via pydantic-settings.
 """
 
+import os
 from pydantic import field_validator, ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Optional
@@ -57,32 +58,28 @@ class Settings(BaseSettings):
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
-    def assemble_db_url(cls, v: str) -> str:
-        """Ensure the DATABASE_URL uses the asyncpg driver."""
-        if isinstance(v, str) and v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql+asyncpg://", 1)
-        if isinstance(v, str) and v.startswith("postgresql://") and "+asyncpg" not in v:
-            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
-        return v
-
-    @field_validator("DATABASE_URL_SYNC", mode="before")
-    @classmethod
-    def assemble_sync_db_url(cls, v: str) -> str:
-        """Ensure the DATABASE_URL_SYNC uses the standard postgresql driver."""
-        if isinstance(v, str) and v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql://", 1)
-        return v
-
-    @property
-    def cors_origins_list(self) -> List[str]:
-        """Parse comma-separated CORS origins into a list."""
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+    def assemble_db_url(cls, v: Optional[str]) -> Optional[str]:
+        """Ensure the DATABASE_URL uses the asyncpg driver and handle Render env vars."""
+        # Prefer environment variable if it exists, even if Pydantic should do it.
+        env_val = os.getenv("DATABASE_URL")
+        target = env_val if env_val else v
+        
+        if not target:
+            return target
+            
+        if target.startswith("postgres://"):
+            target = target.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif target.startswith("postgresql://") and "+asyncpg" not in target:
+            target = target.replace("postgresql://", "postgresql+asyncpg://", 1)
+        
+        return target
 
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
-        extra="ignore"
+        extra="ignore",
+        env_prefix="",
     )
 
 
