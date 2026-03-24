@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = "jupalliprabhas@gmail.com"
     SMTP_PASSWORD: Optional[str] = None  # Should be set in .env as App Password
+    RESEND_API_KEY: Optional[str] = None
 
     # ── Celery ──
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
