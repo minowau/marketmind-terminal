@@ -25,10 +25,14 @@ async def lifespan(app: FastAPI):
     await create_db_tables()
     logger.info("database_tables_created")
 
-    # Start Redis pub/sub listener for WebSocket broadcasting
-    from app.ws.router import redis_listener
-    redis_task = asyncio.create_task(redis_listener())
-    logger.info("redis_pubsub_listener_launched")
+    # Start Redis pub/sub listener for WebSocket broadcasting (optional)
+    redis_task = None
+    try:
+        from app.ws.router import redis_listener
+        redis_task = asyncio.create_task(redis_listener())
+        logger.info("redis_pubsub_listener_launched")
+    except Exception as e:
+        logger.warning("redis_pubsub_skipped", error=str(e))
 
     logger.info("application_started", app=settings.APP_NAME)
 
@@ -36,11 +40,12 @@ async def lifespan(app: FastAPI):
 
     # ── Shutdown ──
     logger.info("application_shutting_down")
-    redis_task.cancel()
-    try:
-        await redis_task
-    except asyncio.CancelledError:
-        pass
+    if redis_task is not None:
+        redis_task.cancel()
+        try:
+            await redis_task
+        except asyncio.CancelledError:
+            pass
     logger.info("application_stopped")
 
 

@@ -1,23 +1,35 @@
 """
 MarketMind AI v2 — Database Session & Engine
 Provides async engine, session factory, and FastAPI dependency.
+Supports both PostgreSQL (asyncpg) and SQLite (aiosqlite).
 """
 
+import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlmodel import SQLModel, Session
-from contextlib import contextmanager, asynccontextmanager
+from contextlib import contextmanager
 
 from app.config import settings
 
+_is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+
+# ── Ensure SQLite data directory exists ──
+if _is_sqlite:
+    # Extract path from sqlite+aiosqlite:///./data/marketmind.db
+    _db_path = settings.DATABASE_URL.split("///", 1)[-1]
+    _db_dir = os.path.dirname(os.path.abspath(_db_path))
+    os.makedirs(_db_dir, exist_ok=True)
+
 # ── Async Engine (for FastAPI endpoints) ──
-async_engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    pool_size=20,
-    max_overflow=10,
-    pool_pre_ping=True,
-)
+_async_kwargs = {"echo": settings.DEBUG}
+if not _is_sqlite:
+    _async_kwargs.update(pool_size=20, max_overflow=10, pool_pre_ping=True)
+else:
+    # SQLite needs connect_args for async
+    _async_kwargs["connect_args"] = {"check_same_thread": False}
+
+async_engine = create_async_engine(settings.DATABASE_URL, **_async_kwargs)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=async_engine,
@@ -26,13 +38,22 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 # ── Sync Engine (for Celery workers / migrations) ──
-sync_engine = create_engine(
-    settings.DATABASE_URL_SYNC,
-    echo=settings.DEBUG,
-    pool_size=10,
-    max_overflow=5,
-    pool_pre_ping=True,
-)
+_sync_kwargs = {"echo": settings.DEBUG}
+if not _is_sqlite:
+    _sync_kwargs.update(pool_size=10, max_overflow=5, pool_pre_ping=True)
+else:
+    _sync_kwargs["connect_args"] = {"check_same_thread": False}
+
+sync_engine = create_engine(settings.DATABASE_URL_SYNC, **_sync_kwargs)
+
+# Enable WAL mode and foreign keys for SQLite
+if _is_sqlite:
+    @event.listens_for(sync_engine, "connect")
+    def _set_sqlite_pragma(dbapi_conn, connection_record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 async def create_db_tables():

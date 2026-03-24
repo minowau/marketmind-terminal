@@ -5,6 +5,10 @@ dist
 .vscode
 .env
 .env.local
+.env.docker
+backend/.env
+backend/.env.*
+!backend/.env.example
 .python-version
 __pycache__
 *.pyc

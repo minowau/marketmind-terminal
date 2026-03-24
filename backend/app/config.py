@@ -16,8 +16,8 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # ── Database ──
-    DATABASE_URL: str = "postgresql+asyncpg://mmuser:mmsecret@localhost:5432/marketmind"
-    DATABASE_URL_SYNC: str = "postgresql://mmuser:mmsecret@localhost:5432/marketmind"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./data/marketmind.db"
+    DATABASE_URL_SYNC: str = "sqlite:///./data/marketmind.db"
 
     # ── Redis ──
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     # ── Security ──
     API_KEY_ADMIN: str = "changeme-admin-key-12345"
     SECRET_KEY: str = "changeme-secret-key-67890"
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    CORS_ORIGINS: str = "*"
 
     # ── Mail ──
     SMTP_HOST: str = "smtp.gmail.com"

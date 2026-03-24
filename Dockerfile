@@ -43,8 +43,11 @@ ENV PYTHONPATH=/app/backend
 ENV PORT=7860
 ENV DEBUG=False
 
+# Create data directory for SQLite
+RUN mkdir -p /app/data
+
 EXPOSE 7860
 
 # Start Gunicorn with uvicorn workers
 # We use --chdir backend to find the app module correctly
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:7860", "--chdir", "backend", "app.main:app"]
+CMD ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:7860", "--chdir", "backend", "app.main:app"]

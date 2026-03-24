@@ -90,31 +90,43 @@ manager = ConnectionManager()
 async def redis_listener():
     """
     Background task: Subscribe to Redis pub/sub and forward messages
-    to WebSocket clients.
+    to WebSocket clients. Gracefully handles Redis being unavailable.
     """
     import redis.asyncio as aioredis
 
-    try:
-        redis_client = aioredis.from_url(settings.REDIS_URL)
-        pubsub = redis_client.pubsub()
-        await pubsub.subscribe("sim:events")
+    max_retries = 3
+    retry_delay = 5
 
-        logger.info("redis_pubsub_listener_started")
+    for attempt in range(max_retries):
+        try:
+            redis_client = aioredis.from_url(settings.REDIS_URL)
+            pubsub = redis_client.pubsub()
+            await pubsub.subscribe("sim:events")
 
-        async for message in pubsub.listen():
-            if message["type"] == "message":
-                try:
-                    data = json.loads(message["data"])
-                    await manager.broadcast_global(data)
-                except json.JSONDecodeError:
-                    logger.warning("redis_invalid_json", data=str(message["data"])[:100])
-                except Exception as e:
-                    logger.error("redis_broadcast_error", error=str(e))
+            logger.info("redis_pubsub_listener_started")
 
-    except Exception as e:
-        logger.error("redis_listener_error", error=str(e))
-        # Retry after delay
-        await asyncio.sleep(5)
+            async for message in pubsub.listen():
+                if message["type"] == "message":
+                    try:
+                        data = json.loads(message["data"])
+                        await manager.broadcast_global(data)
+                    except json.JSONDecodeError:
+                        logger.warning("redis_invalid_json", data=str(message["data"])[:100])
+                    except Exception as e:
+                        logger.error("redis_broadcast_error", error=str(e))
+
+        except Exception as e:
+            logger.warning(
+                "redis_listener_unavailable",
+                error=str(e),
+                attempt=attempt + 1,
+                max_retries=max_retries,
+            )
+            if attempt < max_retries - 1:
+                await asyncio.sleep(retry_delay * (attempt + 1))
+            else:
+                logger.info("redis_listener_giving_up_no_redis_available")
+                return
 
 
 @websocket_router.websocket("/simulation")
