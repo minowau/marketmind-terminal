@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api/v1";
 import { motion, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence } from "framer-motion";
 import { 
   TrendingUp, 
@@ -540,7 +542,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
   useEffect(() => {
     const fetchCount = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/v1/waitlist/count");
+        const response = await fetch(`${API_BASE_URL}/waitlist/count`);
         const data = await response.json();
         if (data.count !== undefined) {
           setWaitlistCount(data.count);
@@ -598,7 +600,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
   const verifyOTP = async (code: string) => {
     setIsAuthLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/api/v1/auth/verify-otp", {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: authEmail, otp_code: code })
@@ -624,7 +626,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
     e.preventDefault();
     setIsAuthLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/api/v1/auth/request-otp", {
+      const response = await fetch(`${API_BASE_URL}/auth/request-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: authEmail })
@@ -651,7 +653,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
     setSubmitStatus(null);
 
     try {
-      const response = await fetch("http://localhost:8000/api/v1/waitlist/", {
+      const response = await fetch(`${API_BASE_URL}/waitlist/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: waitlistName, email: waitlistEmail }),
