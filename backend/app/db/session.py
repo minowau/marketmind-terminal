@@ -59,7 +59,7 @@ if _is_sqlite:
 async def create_db_tables():
     """Create all tables on startup (dev convenience; use Alembic in prod)."""
     async with async_engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
+        await conn.run_sync(SQLModel.metadata.create_all, checkfirst=True)
 
 
 async def drop_db_tables():
