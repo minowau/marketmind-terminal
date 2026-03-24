@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: marketmind-db
+    environment:
+      - POSTGRES_USER=mmuser
+      - POSTGRES_PASSWORD=mmsecret
+      - POSTGRES_DB=marketmind
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mmuser -d marketmind"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: marketmind-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketmind-api
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.docker
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://mmuser:mmsecret@db:5432/marketmind
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketmind-worker
+    command: ["celery", "-A", "app.workers.celery_app.celery", "--workdir", "backend", "worker", "--loglevel=info", "-P", "solo"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.docker
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://mmuser:mmsecret@db:5432/marketmind
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+
+volumes:
+  postgres_data:

@@ -97,8 +97,8 @@ import os
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-# Use /app/dist for Docker compatibility or local relative path
-dist_path = os.path.join(os.getcwd(), "dist")
+# Use absolute path relative to this file for Docker compatibility (even with --chdir)
+dist_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "dist"))
 
 if os.path.exists(dist_path):
     # Mount the assets directory
