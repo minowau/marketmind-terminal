@@ -73,7 +73,7 @@ async def request_otp(
         )
 
     # Send email (fire and forget)
-    send_otp_email(data.email, otp_code)
+    await send_otp_email(data.email, otp_code)
 
     return {
         "status": "success", 

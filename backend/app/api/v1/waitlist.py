@@ -48,7 +48,7 @@ async def join_waitlist(
         await db.refresh(new_entry)
 
         # Send email (fire and forget for now, but we'll log result)
-        send_waitlist_confirmation(data.email, data.name, new_entry.id)
+        await send_waitlist_confirmation(data.email, data.name, new_entry.id)
 
         return {
             "status": "success",

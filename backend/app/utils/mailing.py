@@ -1,9 +1,4 @@
-"""
-MarketMind AI v2 — Mailing Utility
-Handles automated email notifications using SMTP.
-"""
-
-import smtplib
+import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from app.config import settings
@@ -11,7 +6,7 @@ from app.utils.logging import get_logger
 
 logger = get_logger("mailing")
 
-def send_waitlist_confirmation(recipient_email: str, recipient_name: str, reg_number: int):
+async def send_waitlist_confirmation(recipient_email: str, recipient_name: str, reg_number: int):
     """
     Sends a punchy, high-conversion thank you email to a user who just joined the waitlist.
     Includes dynamic First Name and Waitlist Tier.
@@ -63,10 +58,17 @@ Until then — stay ready.
 """
         msg.attach(MIMEText(body, "plain"))
 
-        # Connect and send
-        with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.send_message(msg)
+        # Connect and send asynchronously
+        await aiosmtplib.send(
+            msg,
+            hostname=settings.SMTP_HOST,
+            port=settings.SMTP_PORT,
+            username=settings.SMTP_USER,
+            password=settings.SMTP_PASSWORD,
+            use_tls=(settings.SMTP_PORT == 465),
+            start_tls=(settings.SMTP_PORT == 587),
+            timeout=15,
+        )
         
         logger.info("mailing_success", email=recipient_email, reg_number=reg_number, tier=tier)
         return True
@@ -75,7 +77,7 @@ Until then — stay ready.
         logger.error("mailing_failed", error=str(e), email=recipient_email)
         return False
 
-def send_otp_email(recipient_email: str, otp_code: str):
+async def send_otp_email(recipient_email: str, otp_code: str):
     """
     Sends a time-limited OTP code for terminal access.
     """
@@ -109,10 +111,17 @@ Explore the future of finance.
         """
         msg.attach(MIMEText(body, "plain"))
 
-        # Connect and send
-        with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.send_message(msg)
+        # Connect and send asynchronously
+        await aiosmtplib.send(
+            msg,
+            hostname=settings.SMTP_HOST,
+            port=settings.SMTP_PORT,
+            username=settings.SMTP_USER,
+            password=settings.SMTP_PASSWORD,
+            use_tls=(settings.SMTP_PORT == 465),
+            start_tls=(settings.SMTP_PORT == 587),
+            timeout=15,
+        )
         
         logger.info("mailing_otp_success", email=recipient_email)
         return True

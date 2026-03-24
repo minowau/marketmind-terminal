@@ -46,7 +46,7 @@ class Settings(BaseSettings):
 
     # ── Mail ──
     SMTP_HOST: str = "smtp.gmail.com"
-    SMTP_PORT: int = 465
+    SMTP_PORT: int = 587
     SMTP_USER: str = "jupalliprabhas@gmail.com"
     SMTP_PASSWORD: Optional[str] = None  # Should be set in .env as App Password
 
