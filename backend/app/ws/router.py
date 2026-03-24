@@ -94,7 +94,7 @@ async def redis_listener():
     """
     import redis.asyncio as aioredis
 
-    max_retries = 3
+    max_retries = 1
     retry_delay = 5
 
     for attempt in range(max_retries):

@@ -50,4 +50,4 @@ EXPOSE 7860
 
 # Start Gunicorn with uvicorn workers
 # We use --chdir backend to find the app module correctly
-CMD ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:7860", "--chdir", "backend", "app.main:app"]
+CMD ["gunicorn", "-w", "1", "--timeout", "120", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:7860", "--chdir", "backend", "app.main:app"]
