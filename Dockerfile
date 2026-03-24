@@ -40,11 +40,11 @@ COPY --from=frontend-builder /app/dist ./dist
 
 # Set environment variables
 ENV PYTHONPATH=/app/backend
-ENV PORT=8000
+ENV PORT=7860
 ENV DEBUG=False
 
-EXPOSE 8000
+EXPOSE 7860
 
 # Start Gunicorn with uvicorn workers
 # We use --chdir backend to find the app module correctly
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--chdir", "backend", "app.main:app"]
+CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:7860", "--chdir", "backend", "app.main:app"]
