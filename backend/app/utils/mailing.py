@@ -4,11 +4,13 @@ from app.utils.logging import get_logger
 
 logger = get_logger("mailing")
 
-async def _send_via_sendgrid(to: str, subject: str, html_content: str, text_content: str = ""):
-    """Internal helper to send email via SendGrid v3 API."""
-    if not settings.SENDGRID_API_KEY:
-        # Fallback to Resend if SendGrid is missing (for transition)
-        if settings.RESEND_API_KEY:
+async def _send_via_brevo(to: str, subject: str, html_content: str, text_content: str = ""):
+    """Internal helper to send email via Brevo v3 HTTP API."""
+    if not settings.BREVO_API_KEY:
+        # Fallback logic for transition/legacy support
+        if settings.SENDGRID_API_KEY:
+            return await _send_via_sendgrid(to, subject, html_content, text_content)
+        elif settings.RESEND_API_KEY:
             return await _send_via_resend(to, subject, text_content or html_content)
         logger.warning("mailing_skipped_no_api_key", email=to)
         return False
@@ -16,32 +18,52 @@ async def _send_via_sendgrid(to: str, subject: str, html_content: str, text_cont
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "https://api.sendgrid.com/v3/mail/send",
+                "https://api.brevo.com/v3/smtp/email",
                 headers={
-                    "Authorization": f"Bearer {settings.SENDGRID_API_KEY}",
+                    "api-key": settings.BREVO_API_KEY,
                     "Content-Type": "application/json",
+                    "Accept": "application/json",
                 },
                 json={
-                    "personalizations": [{"to": [{"email": to}]}],
-                    "from": {"email": settings.SENDGRID_FROM_EMAIL, "name": "The Council"},
+                    "sender": {"name": "The Council", "email": "onboarding@thecouncil.ai"},
+                    "to": [{"email": to}],
                     "subject": subject,
-                    "content": [
-                        {"type": "text/plain", "value": text_content or "Please use an HTML enabled client to view this message."},
-                        {"type": "text/html", "value": html_content}
-                    ],
+                    "htmlContent": html_content,
+                    "textContent": text_content or "Please use an HTML enabled client to view this message."
                 },
                 timeout=15.0,
             )
             
             if response.status_code in (200, 201, 202):
-                logger.info("mailing_success_sendgrid", email=to)
+                logger.info("mailing_success_brevo", email=to)
                 return True
             else:
-                logger.error("mailing_failed_sendgrid", status=response.status_code, error=response.text, email=to)
+                logger.error("mailing_failed_brevo", status=response.status_code, error=response.text, email=to)
                 return False
 
     except Exception as e:
-        logger.error("mailing_exception_sendgrid", error=str(e), email=to)
+        logger.error("mailing_exception_brevo", error=str(e), email=to)
+        return False
+
+async def _send_via_sendgrid(to: str, subject: str, html_content: str, text_content: str = ""):
+    """SendGrid v3 API helper."""
+    if not settings.SENDGRID_API_KEY:
+        return False
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                "https://api.sendgrid.com/v3/mail/send",
+                headers={"Authorization": f"Bearer {settings.SENDGRID_API_KEY}", "Content-Type": "application/json"},
+                json={
+                    "personalizations": [{"to": [{"email": to}]}],
+                    "from": {"email": "onboarding@thecouncil.ai", "name": "The Council"},
+                    "subject": subject,
+                    "content": [{"type": "text/plain", "value": text_content}, {"type": "text/html", "value": html_content}]
+                },
+                timeout=15.0
+            )
+            return True
+    except Exception:
         return False
 
 async def _send_via_resend(to: str, subject: str, body: str):
@@ -123,7 +145,7 @@ async def send_waitlist_confirmation(recipient_email: str, recipient_name: str, 
     """)
     
     text = f"You're in, {first_name}. Your position is #{reg_number}. The Council is watching."
-    return await _send_via_sendgrid(recipient_email, f"You're in. [Registry: #{reg_number:06d}] — The Council", html, text)
+    return await _send_via_brevo(recipient_email, f"You're in. [Registry: #{reg_number:06d}] — The Council", html, text)
 
 async def send_otp_email(recipient_email: str, otp_code: str):
     """Sends a premium HTML OTP email for terminal access."""
@@ -141,4 +163,4 @@ async def send_otp_email(recipient_email: str, otp_code: str):
     """)
     
     text = f"Your Secure Access Key: {otp_code}. Expires in 10 minutes."
-    return await _send_via_sendgrid(recipient_email, f"CRITICAL_ACCESS_KEY: [{otp_code}] — The Council", html, text)
+    return await _send_via_brevo(recipient_email, f"CRITICAL_ACCESS_KEY: [{otp_code}] — The Council", html, text)

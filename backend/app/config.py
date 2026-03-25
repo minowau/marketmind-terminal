@@ -52,7 +52,8 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: Optional[str] = None  # Should be set in .env as App Password
     RESEND_API_KEY: Optional[str] = None
     SENDGRID_API_KEY: Optional[str] = None
-    SENDGRID_FROM_EMAIL: str = "onboarding@thecouncil.ai" # User should update this in HF Secrets
+    SENDGRID_FROM_EMAIL: str = "onboarding@thecouncil.ai"
+    BREVO_API_KEY: Optional[str] = "bskLUMVm8DhUg82" # Using provided key for immediate deployment
 
     # ── Celery ──
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
