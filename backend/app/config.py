@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # ── Database ──
     DATABASE_URL: str = "sqlite+aiosqlite:////data/marketmind.db"
     DATABASE_URL_SYNC: str = "sqlite:////data/marketmind.db"
+    TURSO_AUTH_TOKEN: Optional[str] = None
 
     # ── Redis ──
     REDIS_URL: str = "redis://localhost:6379/0"
