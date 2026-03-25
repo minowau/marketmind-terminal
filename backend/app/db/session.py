@@ -1,13 +1,12 @@
 """
 MarketMind AI v2 — Database Session & Engine
 Provides async engine, session factory, and FastAPI dependency.
-Supports both PostgreSQL (asyncpg) and SQLite (aiosqlite).
+Supports PostgreSQL (asyncpg) and SQLite (aiosqlite).
 """
 
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import create_engine, event
-from sqlalchemy.dialects.sqlite.base import SQLiteDialect
 from sqlmodel import SQLModel, Session
 from contextlib import contextmanager
 
@@ -16,27 +15,8 @@ from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-# ── Turso/LibSQL Fix: Prevent unsupported PRAGMA calls ──
-if settings.DATABASE_URL.startswith("libsql"):
-    _original_get_isolation_level = SQLiteDialect.get_isolation_level
-    def _patched_get_isolation_level(self, dbapi_conn):
-        return "SERIALIZABLE" # Fixed value to avoid PRAGMA call
-    SQLiteDialect.get_isolation_level = _patched_get_isolation_level
-    logger.info("turso_isolation_level_patched")
-
 _is_sqlite = settings.DATABASE_URL.startswith("sqlite")
-_is_libsql = settings.DATABASE_URL.startswith("libsql")
-
-def get_engine_url(base_url: str):
-    """Constructs the appropriate engine URL for Turso/libsql."""
-    if base_url.startswith("libsql://"):
-        # Transform libsql:// to sqlite+libsql://
-        new_url = base_url.replace("libsql://", "sqlite+libsql://")
-        if settings.TURSO_AUTH_TOKEN:
-            connector = "&" if "?" in new_url else "?"
-            return f"{new_url}{connector}authToken={settings.TURSO_AUTH_TOKEN}"
-        return new_url
-    return base_url
+_is_postgresql = settings.DATABASE_URL.startswith("postgresql")
 
 # ── Ensure local SQLite data directory exists ──
 if _is_sqlite:
@@ -44,85 +24,67 @@ if _is_sqlite:
     _db_dir = os.path.dirname(os.path.abspath(_db_path))
     os.makedirs(_db_dir, exist_ok=True)
 
-# ── Engines ──
-async_url = get_engine_url(settings.DATABASE_URL)
-sync_url = get_engine_url(settings.DATABASE_URL_SYNC)
+# ── Async Engine (for FastAPI endpoints) ──
 
-if _is_libsql:
-    # Use sync engine for libsql as sqlalchemy-libsql is sync
-    _libsql_kwargs = {
-        "echo": settings.DEBUG,
-        "connect_args": {"check_same_thread": False}
-    }
-    async_engine = create_engine(async_url, **_libsql_kwargs)
-    sync_engine = async_engine
+_async_kwargs = {"echo": settings.DEBUG}
+if _is_postgresql:
+    _async_kwargs.update(pool_size=20, max_overflow=10, pool_pre_ping=True)
 else:
-    _async_kwargs = {"echo": settings.DEBUG}
-    if not _is_sqlite:
-        _async_kwargs.update(pool_size=20, max_overflow=10, pool_pre_ping=True)
-    else:
-        _async_kwargs["connect_args"] = {"check_same_thread": False}
-    
-    async_engine = create_async_engine(async_url, **_async_kwargs)
-    sync_engine = create_engine(sync_url, echo=settings.DEBUG)
+    _async_kwargs["connect_args"] = {"check_same_thread": False}
 
-# ── Session Factories ──
-if _is_libsql:
-    from sqlalchemy.orm import sessionmaker
-    AsyncSessionLocal = sessionmaker(bind=async_engine, class_=Session, expire_on_commit=False)
-else:
-    AsyncSessionLocal = async_sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
+async_engine = create_async_engine(_async_url, **_async_kwargs)
+
+# ── Sync Engine (for background workers) ──
+_sync_kwargs = {"echo": settings.DEBUG}
+if not _is_postgresql:
+    _sync_kwargs["connect_args"] = {"check_same_thread": False}
+
+sync_engine = create_engine(_sync_url, **_sync_kwargs)
+
+# Enable WAL mode for SQLite
+if _is_sqlite:
+    @event.listens_for(sync_engine, "connect")
+    def _set_sqlite_pragma(dbapi_conn, connection_record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+AsyncSessionLocal = async_sessionmaker(
+    bind=async_engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 async def create_db_tables():
     """Create all tables on startup."""
     try:
-        if _is_libsql:
-            SQLModel.metadata.create_all(async_engine)
-        else:
-            async with async_engine.begin() as conn:
-                await conn.run_sync(SQLModel.metadata.create_all)
-        logger.info("database_tables_prepared", url=async_url.split("?")[0])
+        async with async_engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
+        logger.info("database_tables_created")
     except Exception as e:
         if "already exists" in str(e).lower():
-            pass
+            logger.debug("database_tables_already_exist")
         else:
             logger.error("database_table_creation_failed", error=str(e))
 
 
-async def get_db():
-    """Yield a database session for FastAPI."""
-    if _is_libsql:
-        with AsyncSessionLocal() as session:
-            try:
-                yield session
-                session.commit()
-            except Exception:
-                session.rollback()
-                raise
-            finally:
-                session.close()
-    else:
-        async with AsyncSessionLocal() as session:
-            try:
-                yield session
-                await session.commit()
-            except Exception:
-                await session.rollback()
-                raise
-            finally:
-                await session.close()
+async def get_db() -> AsyncSession:
+    """Yield an async database session for FastAPI route dependencies."""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
 
 
 @contextmanager
 def get_session():
     """Yield a synchronous session for background workers."""
-    if _is_libsql:
-        session = Session(sync_engine)
-    else:
-        # For standard sync engine, use same logic
-        session = Session(sync_engine)
-        
+    session = Session(sync_engine)
     try:
         yield session
         session.commit()
