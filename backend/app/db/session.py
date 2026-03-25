@@ -50,8 +50,13 @@ sync_url = get_engine_url(settings.DATABASE_URL_SYNC)
 
 if _is_libsql:
     # Use sync engine for libsql as sqlalchemy-libsql is sync
-    # Set isolation_level=None to avoid PRAGMA read_uncommitted which fails over HTTP (405)
-    async_engine = create_engine(async_url, echo=settings.DEBUG, isolation_level=None)
+    # Set isolation_level="AUTOCOMMIT" to avoid PRAGMA calls that fail over HTTP (405)
+    _libsql_kwargs = {
+        "echo": settings.DEBUG,
+        "isolation_level": "AUTOCOMMIT",
+        "connect_args": {"check_same_thread": False}
+    }
+    async_engine = create_engine(async_url, **_libsql_kwargs)
     sync_engine = async_engine
 else:
     _async_kwargs = {"echo": settings.DEBUG}
