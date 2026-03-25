@@ -15,28 +15,44 @@ async def _send_via_brevo(to: str, subject: str, html_content: str, text_content
         import aiosmtplib
         
         msg = EmailMessage()
-        msg["From"] = f"The Council <onboarding@thecouncil.ai>"
+        
+        # Use the verified sender email to avoid Brevo "Unverified Sender" rejections
+        from_email = settings.BREVO_SMTP_USER or "jupalliprabhas@gmail.com"
+        msg["From"] = f"The Council <{from_email}>"
         msg["To"] = to
         msg["Subject"] = subject
         
         msg.set_content(text_content or "Please use an HTML enabled client to view this message.")
         msg.add_alternative(html_content, subtype='html')
 
-        await aiosmtplib.send(
-            msg,
-            hostname="smtp-relay.brevo.com",
-            port=587,
-            start_tls=True,
-            username=settings.BREVO_SMTP_USER or "jupalliprabhas@gmail.com",
-            password=settings.BREVO_API_KEY, # This is the SMTP key provided
-            timeout=15.0
-        )
-        
-        logger.info("mailing_success_brevo_smtp", email=to)
-        return True
+        # Hugging Face often blocks port 587. Try alternative ports.
+        ports_to_try = [
+            (587, True),   # standard SMTP with STARTTLS
+            (2525, True),  # alternate SMTP with STARTTLS (often unblocked)
+            (465, False)   # implicit SSL/TLS
+        ]
 
-    except Exception as e:
-        logger.error("mailing_exception_brevo_smtp", error=str(e), email=to)
+        last_err = None
+        for port, start_tls in ports_to_try:
+            try:
+                await aiosmtplib.send(
+                    msg,
+                    hostname="smtp-relay.brevo.com",
+                    port=port,
+                    start_tls=start_tls,
+                    use_tls=not start_tls,
+                    username=settings.BREVO_SMTP_USER or "jupalliprabhas@gmail.com",
+                    password=settings.BREVO_API_KEY,
+                    timeout=10.0
+                )
+                logger.info("mailing_success_brevo_smtp", email=to, port=port)
+                return True
+            except Exception as e:
+                last_err = e
+                logger.warning("mailing_retry_brevo_smtp", email=to, port=port, error=str(e))
+                continue
+                
+        logger.error("mailing_exception_brevo_smtp_all_ports_failed", error=str(last_err), email=to)
         return False
 
 async def _send_via_sendgrid(to: str, subject: str, html_content: str, text_content: str = ""):
