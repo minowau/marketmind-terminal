@@ -25,6 +25,8 @@ if _is_sqlite:
     os.makedirs(_db_dir, exist_ok=True)
 
 # ── Async Engine (for FastAPI endpoints) ──
+_async_url = settings.DATABASE_URL
+_sync_url = settings.DATABASE_URL_SYNC
 
 _async_kwargs = {"echo": settings.DEBUG}
 if _is_postgresql:
