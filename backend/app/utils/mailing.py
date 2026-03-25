@@ -55,6 +55,10 @@ async def _send_via_brevo(to: str, subject: str, html_content: str, text_content
         logger.error("mailing_exception_brevo_smtp_all_ports_failed", error=str(last_err), email=to)
         return False
 
+    except Exception as e:
+        logger.error("mailing_setup_exception", error=str(e), email=to)
+        return False
+
 async def _send_via_sendgrid(to: str, subject: str, html_content: str, text_content: str = ""):
     """SendGrid v3 API helper."""
     if not settings.SENDGRID_API_KEY:
