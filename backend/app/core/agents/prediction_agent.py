@@ -41,7 +41,9 @@ def aggregate_actions(
             query = query.where(AgentAction.signal_id == signal_id)
         query = query.order_by(AgentAction.timestamp.desc())
 
-        actions = session.exec(query).all()
+        results = session.exec(query).all()
+        # Extract data immediately to avoid "not bound to session" errors outside the block
+        actions = [{"action": a.action, "size": a.size} for a in results]
 
     if not actions:
         return {

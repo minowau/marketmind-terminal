@@ -7,12 +7,7 @@ logger = get_logger("mailing")
 async def _send_via_brevo(to: str, subject: str, html_content: str, text_content: str = ""):
     """Internal helper to send email via Brevo v3 HTTP API."""
     if not settings.BREVO_API_KEY:
-        # Fallback logic for transition/legacy support
-        if settings.SENDGRID_API_KEY:
-            return await _send_via_sendgrid(to, subject, html_content, text_content)
-        elif settings.RESEND_API_KEY:
-            return await _send_via_resend(to, subject, text_content or html_content)
-        logger.warning("mailing_skipped_no_api_key", email=to)
+        logger.warning("mailing_skipped_no_brevo_key_the_council_requires_brevo", email=to)
         return False
 
     try:
