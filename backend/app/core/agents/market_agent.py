@@ -64,13 +64,42 @@ async def fetch_market_data(symbol: str) -> Optional[Dict[str, Any]]:
     return data
 
 
-async def fetch_and_update_stock(symbol: str) -> Optional[Stock]:
+# In-memory cooldown for failed fetches (symbol -> timestamp)
+GLOBAL_COOLDOWN: Dict[str, datetime] = {}
+COOLDOWN_MINUTES = 5
+
+async def fetch_and_update_stock(symbol: str, force: bool = False) -> Optional[Stock]:
     """
     Fetch latest market data and update the Stock record in DB.
-    Creates a new record if it doesn't exist.
+    Throttles redundant calls and respects a cooldown for failed (rate-limited) symbols.
     """
+    symbol = symbol.upper()
+
+    # 1. 429 Cooldown Check
+    if symbol in GLOBAL_COOLDOWN:
+        since_fail = (datetime.utcnow() - GLOBAL_COOLDOWN[symbol]).total_seconds() / 60
+        if since_fail < COOLDOWN_MINUTES:
+            logger.warning("skipping_fetch_cooldown_active", symbol=symbol, mins_left=round(COOLDOWN_MINUTES - since_fail, 1))
+            return None
+        else:
+            del GLOBAL_COOLDOWN[symbol]
+
+    # 2. Check if refresh is actually needed (unless forced)
+    if not force:
+        with get_session() as session:
+            existing = session.get(Stock, symbol)
+            if existing and existing.updated_at:
+                age_mins = (datetime.utcnow() - existing.updated_at).total_seconds() / 60
+                if age_mins < 30:
+                    logger.debug("skipping_fetch_recent_data_exists", symbol=symbol, age_mins=round(age_mins, 1))
+                    return existing
+
+    # 3. Perform the fetch
     data = await fetch_market_data(symbol)
+    
     if not data:
+        # Mark for cooldown to avoid slamming on 429s or invalid symbols
+        GLOBAL_COOLDOWN[symbol] = datetime.utcnow()
         return None
 
     # Compute technical indicators
@@ -102,12 +131,13 @@ async def fetch_and_update_stock(symbol: str) -> Optional[Stock]:
                 rsi=rsi,
                 macd=macd_data["macd"] if macd_data else None,
                 macd_signal=macd_data["signal"] if macd_data else None,
+                updated_at=datetime.utcnow()
             )
             session.add(stock)
 
         session.commit()
         session.refresh(stock)
-        session.expunge(stock) # Allow object to be used after session close
+        session.expunge(stock)
 
         logger.info(
             "stock_updated",

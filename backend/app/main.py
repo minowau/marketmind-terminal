@@ -23,6 +23,9 @@ async def lifespan(app: FastAPI):
     # Create database tables
     from app.db.session import create_db_tables
     await create_db_tables()
+    # Seed initial data (Fire and forget to keep startup fast)
+    from app.db.seeding import seed_initial_data
+    asyncio.create_task(seed_initial_data())
     logger.info("database_tables_created")
 
     # Start Redis pub/sub listener for WebSocket broadcasting (optional)
