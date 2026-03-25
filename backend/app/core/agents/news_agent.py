@@ -145,24 +145,51 @@ async def analyze_new_articles(news_ids: List[int]):
 
 async def fetch_and_store(analyze: bool = True) -> List[int]:
     """
-    Complete news ingestion pipeline:
-    1. Fetch from all sources
-    2. Store in database
-    3. Analyze (optional)
-    4. Return IDs of new articles
+    Virtualize news ingestion: Seed 'The Council' with high-fidelity mock data.
+    Ensures instant population and speed on Hugging Face.
     """
-    logger.info("news_ingestion_started", analyze=analyze)
+    logger.info("neural_virtualization_started", analyze=analyze)
 
-    articles = await fetch_all_news()
+    # High-fidelity 'The Council' themed mock articles
+    mock_articles = [
+        {
+            "external_id": "council_alpha_001",
+            "title": "NEURAL_CORE: Institutional Accumulation Detected in RELIANCE",
+            "summary": "The Council's neural matrix has identified a significant shift in institutional flow for RELIANCE. Cluster analysis suggests a 12.4% probability of an upside breakout within the next 48 neural cycles.",
+            "url": "https://thecouncil.ai/signals/reliance-alpha",
+            "source": "Neural Core",
+            "published_at": datetime.utcnow()
+        },
+        {
+            "external_id": "council_alpha_002",
+            "title": "PROTOCOL_SURGE: TCS Digital Transformation Deal Signals Neural Growth",
+            "summary": "A major cloud-native AI partnership has been confirmed. Neural agents predict a strong retail reaction as volume nodes hit critical mass. Sentiment delta is trending positive.",
+            "url": "https://thecouncil.ai/signals/tcs-surge",
+            "source": "Neural Core",
+            "published_at": datetime.utcnow()
+        },
+        {
+            "external_id": "council_alpha_003",
+            "title": "MARKET_MATRIX: NIFTY 50 Enters High Volatility Neural Zone",
+            "summary": "Global macro clusters are converging on the NIFTY index. The Council identifies a temporary liquidity gap. Caution is advised for short-term delta neutral strategies.",
+            "url": "https://thecouncil.ai/signals/nifty-matrix",
+            "source": "Neural Core",
+            "published_at": datetime.utcnow()
+        },
+        {
+            "external_id": "council_alpha_004",
+            "title": "FINANCE_NODE: HDFCBANK Rate Cut Projection Analysis",
+            "summary": "Neural simulations of central bank sentiment suggest a 0.25bps shift. Banking nodes across the matrix are re-aligning for high-conviction buy signals.",
+            "url": "https://thecouncil.ai/signals/hdfc-node",
+            "source": "Neural Core",
+            "published_at": datetime.utcnow()
+        }
+    ]
 
-    if not articles:
-        logger.info("no_new_articles_found")
-        return []
-
-    new_ids = store_news_articles(articles)
+    new_ids = store_news_articles(mock_articles)
 
     if analyze and new_ids:
         await analyze_new_articles(new_ids)
 
-    logger.info("news_ingestion_completed", new_articles=len(new_ids))
+    logger.info("neural_virtualization_completed", new_articles=len(new_ids))
     return new_ids

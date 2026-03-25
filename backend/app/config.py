@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     SMTP_USER: str = "jupalliprabhas@gmail.com"
     SMTP_PASSWORD: Optional[str] = None  # Should be set in .env as App Password
     RESEND_API_KEY: Optional[str] = None
+    SENDGRID_API_KEY: Optional[str] = None
+    SENDGRID_FROM_EMAIL: str = "onboarding@thecouncil.ai" # User should update this in HF Secrets
 
     # ── Celery ──
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
