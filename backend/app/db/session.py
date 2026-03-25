@@ -11,6 +11,9 @@ from sqlmodel import SQLModel, Session
 from contextlib import contextmanager
 
 from app.config import settings
+from app.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 _is_sqlite = settings.DATABASE_URL.startswith("sqlite")
 _is_libsql = settings.DATABASE_URL.startswith("libsql")
@@ -38,7 +41,8 @@ sync_url = get_engine_url(settings.DATABASE_URL_SYNC)
 
 if _is_libsql:
     # Use sync engine for libsql as sqlalchemy-libsql is sync
-    async_engine = create_engine(async_url, echo=settings.DEBUG)
+    # Set isolation_level=None to avoid PRAGMA read_uncommitted which fails over HTTP (405)
+    async_engine = create_engine(async_url, echo=settings.DEBUG, isolation_level=None)
     sync_engine = async_engine
 else:
     _async_kwargs = {"echo": settings.DEBUG}
