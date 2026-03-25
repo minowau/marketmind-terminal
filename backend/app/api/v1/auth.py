@@ -40,16 +40,19 @@ async def request_otp(
             detail="Access Denied: Unauthorized neural signature."
         )
 
-    # Check if email is on waitlist
-    statement = select(Waitlist).where(Waitlist.email == data.email)
-    result = await db.execute(statement)
-    user = result.scalar_one_or_none()
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access Denied: Node not registered on waitlist."
-        )
+    # Whitelisted users bypass waitlist check (Optional)
+    # However, for Enter Terminal, we prioritize the whitelist.
+    # We'll allow jupalliprabhas@gmail.com even if they haven't manually signed up.
+    if data.email.lower() not in ALLOWED_EMAILS:
+        statement = select(Waitlist).where(Waitlist.email == data.email)
+        result = await db.execute(statement)
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access Denied: Node not registered on waitlist."
+            )
 
     # Generate 6-digit OTP
     otp_code = "".join(random.choices(string.digits, k=6))

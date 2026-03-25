@@ -66,6 +66,22 @@ async def join_waitlist(
             detail=f"Failed to join waitlist: {str(e)}"
         )
 
+@router.get("/")
+async def get_waitlist_entries(
+    db: AsyncSession = Depends(get_db)
+):
+    """Returns all users on the waitlist (neural signatures)."""
+    try:
+        statement = select(Waitlist).order_by(Waitlist.created_at.desc())
+        result = await db.execute(statement)
+        entries = result.scalars().all()
+        return {"status": "success", "data": entries}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch waitlist nodes: {str(e)}"
+        )
+
 @router.get("/count")
 async def get_waitlist_count(
     db: AsyncSession = Depends(get_db)
