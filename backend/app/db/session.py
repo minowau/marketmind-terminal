@@ -7,6 +7,7 @@ Supports both PostgreSQL (asyncpg) and SQLite (aiosqlite).
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import create_engine, event
+from sqlalchemy.dialects.sqlite.base import SQLiteDialect
 from sqlmodel import SQLModel, Session
 from contextlib import contextmanager
 
@@ -14,6 +15,14 @@ from app.config import settings
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+# ── Turso/LibSQL Fix: Prevent unsupported PRAGMA calls ──
+if settings.DATABASE_URL.startswith("libsql"):
+    _original_get_isolation_level = SQLiteDialect.get_isolation_level
+    def _patched_get_isolation_level(self, dbapi_conn):
+        return "SERIALIZABLE" # Fixed value to avoid PRAGMA call
+    SQLiteDialect.get_isolation_level = _patched_get_isolation_level
+    logger.info("turso_isolation_level_patched")
 
 _is_sqlite = settings.DATABASE_URL.startswith("sqlite")
 _is_libsql = settings.DATABASE_URL.startswith("libsql")
