@@ -307,7 +307,7 @@ const NeuralProcessFlow = () => {
         {
             title: "Psychological Profiling",
             subtitle: "Agent-Based Simulation",
-            description: "We deploy 1,240 specialized investor agents to 'react' to the parsed news. Each agent has unique biases simulating the mass-market psychological response.",
+            description: "We deploy 30 specialized neural agents to 'react' to the parsed news. Each agent has unique biases simulating the mass-market psychological response.",
             tech: ["Behavioral Matrix", "Monte Carlo Logic", "Agent Persistence"],
             visual: <div className="flex gap-2 items-center justify-center h-full">
                         {Array.from({ length: 5 }).map((_, i) => (
@@ -560,7 +560,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
   const steps = [
     "Initializing neural core...",
     "Connecting to market firehose...",
-    "Simulating 1,240 edge cases...",
+    "Simulating 30 neural layers...",
     "Terminal protocol ready."
   ];
 
@@ -720,7 +720,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
           {/* Left: Logo */}
           <div className="flex items-center gap-2 z-10">
              <div className="h-2 w-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(var(--primary),1)]" />
-             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white">MarketMind <span className="text-primary/40 italic">Terminal</span></span>
+             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white">The <span className="text-primary/40 italic">Council</span></span>
           </div>
 
           {/* Center: Perfectly Centered Counter */}
@@ -869,7 +869,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
                The <span className="text-primary italic">Agents</span> of Chaos
              </h2>
              <p className="text-muted-foreground text-sm uppercase tracking-widest max-w-xl mx-auto">
-               We simulate 1,240+ specialized investor personas to predict the mass-market psychological response to any event.
+               We simulate 30+ specialized neural personas to predict the mass-market psychological response to any event.
              </p>
           </div>
 
@@ -1127,7 +1127,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
       {/* Footer */}
       <footer className="py-12 px-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 bg-black/80 backdrop-blur-md">
          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">MarketMind © 2026</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">The Council © 2026</span>
          </div>
          <div className="flex items-center gap-10">
             <a href="#" className="text-[9px] font-black uppercase tracking-widest text-white/30 hover:text-primary transition-colors">Documentation</a>

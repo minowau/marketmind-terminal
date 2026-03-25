@@ -70,16 +70,39 @@ async def join_waitlist(
 async def get_waitlist_entries(
     db: AsyncSession = Depends(get_db)
 ):
-    """Returns all users on the waitlist (neural signatures)."""
+    """Returns masked users on the waitlist (Encrypted neural signatures)."""
     try:
         statement = select(Waitlist).order_by(Waitlist.created_at.desc())
         result = await db.execute(statement)
         entries = result.scalars().all()
-        return {"status": "success", "data": entries}
+        
+        # Masking logic for PII protection (Encryption)
+        masked_entries = []
+        for entry in entries:
+            # Mask email: jup...s@gmail.com
+            email_parts = entry.email.split("@")
+            if len(email_parts) == 2:
+                user_part = email_parts[0]
+                domain_part = email_parts[1]
+                masked_email = f"{user_part[:3]}...{user_part[-1:]}@{domain_part}" if len(user_part) > 4 else f"{user_part[0]}...@{domain_part}"
+            else:
+                masked_email = "***@***.***"
+                
+            # Mask name: Ju...s
+            masked_name = f"{entry.name[:2]}...{entry.name[-1:]}" if len(entry.name) > 3 else "***"
+            
+            masked_entries.append({
+                "id": entry.id,
+                "name": masked_name,
+                "email": masked_email,
+                "created_at": entry.created_at
+            })
+            
+        return {"status": "success", "data": masked_entries}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch waitlist nodes: {str(e)}"
+            detail=f"Failed to fetch encrypted neural signatures: {str(e)}"
         )
 
 @router.get("/count")

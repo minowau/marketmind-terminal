@@ -19,7 +19,7 @@ async def _send_via_resend(to: str, subject: str, body: str):
                     "Content-Type": "application/json",
                 },
                 json={
-                    "from": "MarketMind AI <onboarding@resend.dev>",
+                    "from": "The Council <onboarding@resend.dev>",
                     "to": to,
                     "subject": subject,
                     "text": body,
@@ -54,20 +54,20 @@ async def send_waitlist_confirmation(recipient_email: str, recipient_name: str, 
     else:
         tier = "Early Access"
 
-    subject = f"You're in. [Registry: #{reg_number:06d}] — MarketMind AI"
+    subject = f"You're in. [Registry: #{reg_number:06d}] — The Council"
     body = f"""Hi {first_name},
 
 You’re in.
 
-MarketMind AI is building something different:
+The Council is building something different:
 
 We don’t just analyze markets.
 We simulate them.
 
 You’ll soon be able to:
-• See how investors react to news
+• Observe the 30 Neural Agents in high-fidelity
 • Detect signals before they move
-• Predict market behavior
+• Predict market behavior with behavioral matrixes
 
 Your current status:
 {tier} (Position #{reg_number})
@@ -76,7 +76,7 @@ We’ll notify you as soon as your access unlocks.
 
 Until then — stay ready.
 
-— MarketMind AI
+— The Council
 """
     return await _send_via_resend(recipient_email, subject, body)
 
@@ -84,7 +84,7 @@ async def send_otp_email(recipient_email: str, otp_code: str):
     """
     Sends a time-limited OTP code for terminal access.
     """
-    subject = f"CRITICAL_ACCESS_KEY: [{otp_code}] — MarketMind AI"
+    subject = f"CRITICAL_ACCESS_KEY: [{otp_code}] — The Council"
     body = f"""
 NEURAL_GATE_AUTHORIZATION_REQUIRED
 
@@ -95,11 +95,11 @@ YOUR SECURE OTP: {otp_code}
 EXPIRES_IN: 10 MINUTES
 --------------------------------------------------
 
-SECURITY_NOTICE: DO NOT SHARE THIS KEY. This code identifies your neural signature for this session only. Use it at at the Terminal Protocol Gate to authorize your entry.
+SECURITY_NOTICE: DO NOT SHARE THIS KEY. This code identifies your neural signature for this session only. Use it at at the Neural Gate to authorize your entry.
 
 If you did not request this authorization, ignore this transmission. Your node remains secure.
 
 Explore the future of finance.
-— The MarketMind Core
+— The Council Core
     """
     return await _send_via_resend(recipient_email, subject, body)

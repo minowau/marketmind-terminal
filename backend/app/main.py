@@ -133,4 +133,4 @@ if os.path.exists(dist_path):
 else:
     @app.get("/")
     async def root():
-        return {"message": "MarketMind AI API is running. Frontend not found in /dist"}
+        return {"message": "The Council API is running. Frontend not found in /dist"}

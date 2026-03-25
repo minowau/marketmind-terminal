@@ -4,7 +4,7 @@ import { HelpCircle, X, Globe, ChevronRight, ChevronLeft } from "lucide-react";
 
 const content = {
   en: {
-    title: "MarketMind Tour",
+    title: "The Council Tour",
     steps: [
       {
         title: "Welcome to the Terminal",
@@ -35,7 +35,7 @@ const content = {
     }
   },
   hi: {
-    title: "मार्केटमाइंड टूर",
+    title: "द काउंसिल टूर",
     steps: [
       {
         title: "टर्मिनल में आपका स्वागत है",

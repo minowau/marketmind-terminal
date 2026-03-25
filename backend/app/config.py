@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     """Central configuration loaded from environment / .env file."""
 
     # ── Application ──
-    APP_NAME: str = "MarketMind AI"
+    APP_NAME: str = "The Council"
     APP_VERSION: str = "2.0.0"
     DEBUG: bool = False
 
