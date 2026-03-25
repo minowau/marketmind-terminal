@@ -5,39 +5,38 @@ from app.utils.logging import get_logger
 logger = get_logger("mailing")
 
 async def _send_via_brevo(to: str, subject: str, html_content: str, text_content: str = ""):
-    """Internal helper to send email via Brevo v3 HTTP API."""
+    """Internal helper to send email via Brevo SMTP relay."""
     if not settings.BREVO_API_KEY:
         logger.warning("mailing_skipped_no_brevo_key_the_council_requires_brevo", email=to)
         return False
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "https://api.brevo.com/v3/smtp/email",
-                headers={
-                    "api-key": settings.BREVO_API_KEY,
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                },
-                json={
-                    "sender": {"name": "The Council", "email": "onboarding@thecouncil.ai"},
-                    "to": [{"email": to}],
-                    "subject": subject,
-                    "htmlContent": html_content,
-                    "textContent": text_content or "Please use an HTML enabled client to view this message."
-                },
-                timeout=15.0,
-            )
-            
-            if response.status_code in (200, 201, 202):
-                logger.info("mailing_success_brevo", email=to)
-                return True
-            else:
-                logger.error("mailing_failed_brevo", status=response.status_code, error=response.text, email=to)
-                return False
+        from email.message import EmailMessage
+        import aiosmtplib
+        
+        msg = EmailMessage()
+        msg["From"] = f"The Council <onboarding@thecouncil.ai>"
+        msg["To"] = to
+        msg["Subject"] = subject
+        
+        msg.set_content(text_content or "Please use an HTML enabled client to view this message.")
+        msg.add_alternative(html_content, subtype='html')
+
+        await aiosmtplib.send(
+            msg,
+            hostname="smtp-relay.brevo.com",
+            port=587,
+            start_tls=True,
+            username=settings.BREVO_SMTP_USER or "jupalliprabhas@gmail.com",
+            password=settings.BREVO_API_KEY, # This is the SMTP key provided
+            timeout=15.0
+        )
+        
+        logger.info("mailing_success_brevo_smtp", email=to)
+        return True
 
     except Exception as e:
-        logger.error("mailing_exception_brevo", error=str(e), email=to)
+        logger.error("mailing_exception_brevo_smtp", error=str(e), email=to)
         return False
 
 async def _send_via_sendgrid(to: str, subject: str, html_content: str, text_content: str = ""):

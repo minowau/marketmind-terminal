@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     SENDGRID_API_KEY: Optional[str] = None
     SENDGRID_FROM_EMAIL: str = "onboarding@thecouncil.ai"
     BREVO_API_KEY: Optional[str] = "bskLUMVm8DhUg82" # Using provided key for immediate deployment
+    BREVO_SMTP_USER: Optional[str] = "jupalliprabhas@gmail.com"
 
     # ── Celery ──
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
