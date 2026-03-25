@@ -16,8 +16,8 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # ── Database ──
-    DATABASE_URL: str = "sqlite+aiosqlite:///./data/marketmind.db"
-    DATABASE_URL_SYNC: str = "sqlite:///./data/marketmind.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:////data/marketmind.db"
+    DATABASE_URL_SYNC: str = "sqlite:////data/marketmind.db"
 
     # ── Redis ──
     REDIS_URL: str = "redis://localhost:6379/0"

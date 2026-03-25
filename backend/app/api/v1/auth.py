@@ -15,8 +15,7 @@ from app.utils.mailing import send_otp_email
 from pydantic import BaseModel
 
 ALLOWED_EMAILS = {
-    "jupalliprabhas@gmail.com",
-    "jupalli.jaswant@iiitb.ac.in"
+    "jupalliprabhas@gmail.com"
 }
 
 router = APIRouter()

@@ -43,8 +43,9 @@ ENV PYTHONPATH=/app/backend
 ENV PORT=7860
 ENV DEBUG=False
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data
+# Ensure data directory exists for SQLite
+RUN mkdir -p /app/data && chmod 777 /app/data
+RUN mkdir -p /data && chmod 777 /data
 
 EXPOSE 7860
 
