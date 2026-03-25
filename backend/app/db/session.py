@@ -22,11 +22,27 @@ _is_postgresql = settings.DATABASE_URL.startswith("postgresql")
 if _is_sqlite:
     _db_path = settings.DATABASE_URL.split("///", 1)[-1]
     _db_dir = os.path.dirname(os.path.abspath(_db_path))
-    os.makedirs(_db_dir, exist_ok=True)
+    logger.info("sqlite_db_setup", path=_db_path, directory=_db_dir)
+    try:
+        os.makedirs(_db_dir, exist_ok=True)
+        # Verify writability
+        test_file = os.path.join(_db_dir, ".write_test")
+        with open(test_file, "w") as f:
+            f.write("test")
+        os.remove(test_file)
+        logger.info("sqlite_db_dir_ready")
+    except Exception as e:
+        logger.error("sqlite_db_setup_failed", error=str(e))
 
-# ── Async Engine (for FastAPI endpoints) ──
+# ── Engines ──
 _async_url = settings.DATABASE_URL
 _sync_url = settings.DATABASE_URL_SYNC
+
+# ── Defensive Sanitization: Revert legacy 'libsql' URLs to SQLite ──
+if "libsql" in _async_url:
+    _async_url = _async_url.replace("libsql://", "sqlite+aiosqlite:///").replace("sqlite+libsql://", "sqlite+aiosqlite:///")
+if "libsql" in _sync_url:
+    _sync_url = _sync_url.replace("libsql://", "sqlite:///").replace("sqlite+libsql://", "sqlite:///")
 
 _async_kwargs = {"echo": settings.DEBUG}
 if _is_postgresql:

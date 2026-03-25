@@ -109,8 +109,12 @@ from fastapi.responses import FileResponse
 dist_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "dist"))
 
 if os.path.exists(dist_path):
-    # Mount the assets directory
-    app.mount("/assets", StaticFiles(directory=os.path.join(dist_path, "assets")), name="assets")
+    # Mount the assets directory (Safely check if it exists first)
+    assets_path = os.path.join(dist_path, "assets")
+    if os.path.isdir(assets_path):
+        app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+    else:
+        logger.warning("frontend_assets_dir_missing", path=assets_path)
 
     # Catch-all route to serve index.html for React Router
     @app.get("/{full_path:path}")
